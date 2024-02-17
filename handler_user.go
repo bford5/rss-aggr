@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bford5/rss-aggr/internal/auth"
 	"github.com/bford5/rss-aggr/internal/database"
 	"github.com/google/uuid"
 )
@@ -39,19 +38,6 @@ func (apiConfig *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Req
 	respondWithJSON(w, 201, dbUserToUser(user))
 }
 
-func (apiConfig *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request) {
-	apiKey, err := auth.GetAPIKey(r.Header)
-
-	if err != nil {
-		respondWithError(w, 403, fmt.Sprintf("auth error: %v", err))
-		return
-	}
-
-	user, err := apiConfig.DB.GetUserByAPIKey(r.Context(), apiKey)
-	if err != nil {
-		respondWithError(w, 400, fmt.Sprintf("failed to get user: %v", err))
-		return
-	}
-
+func (apiConfig *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
 	respondWithJSON(w, 200, dbUserToUser(user))
 }
