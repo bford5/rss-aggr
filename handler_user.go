@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
-
+	"github.com/bford5/rss-aggr/internal/auth"
 	"github.com/bford5/rss-aggr/internal/database"
+	"github.com/google/uuid"
 )
 
-func (apiConfig *apiConfig) handlerUser(w http.ResponseWriter, r *http.Request) {
+func (apiConfig *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Name string `json:"name"`
 	}
@@ -32,7 +32,24 @@ func (apiConfig *apiConfig) handlerUser(w http.ResponseWriter, r *http.Request) 
 		Name:      params.Name,
 	})
 	if err != nil {
-		respondWithError(w, 400, fmt.Sprintf("could not create user:", err))
+		respondWithError(w, 400, fmt.Sprintf("could not create user: %v", err))
+		return
+	}
+
+	respondWithJSON(w, 201, dbUserToUser(user))
+}
+
+func (apiConfig *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := auth.GetAPIKey(r.Header)
+
+	if err != nil {
+		respondWithError(w, 403, fmt.Sprintf("auth error: %v", err))
+		return
+	}
+
+	user, err := apiConfig.DB.GetUserByAPIKey(r.Context(), apiKey)
+	if err != nil {
+		respondWithError(w, 400, fmt.Sprintf("failed to get user: %v", err))
 		return
 	}
 
